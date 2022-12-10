@@ -1,0 +1,10 @@
+config/*
+cache/*
+
+data/
+result/
+log/
+
+tokenization/
+lightning_logs/
+model_ckpt/
