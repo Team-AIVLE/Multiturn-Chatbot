@@ -100,7 +100,7 @@ class LightningPLM(LightningModel):
         return torch.LongTensor(data), torch.LongTensor(mask), torch.LongTensor(label)
 
     def train_dataloader(self):
-        data_path = f'{self.hparams.data_dir}/train.csv'
+        data_path = f'{self.hparams.data_dir}/train.parquet'
         self.train_set = PlmData(data_path, tokenizer=self.tokenizer, max_len=self.hparams.max_len, \
              premise=self.hparams.premise, hypothesis=self.hparams.hypothesis)
         train_dataloader = DataLoader(
@@ -109,7 +109,7 @@ class LightningPLM(LightningModel):
         return train_dataloader
     
     def val_dataloader(self):
-        data_path = f'{self.hparams.data_dir}/valid.csv'
+        data_path = f'{self.hparams.data_dir}/valid.parquet'
         self.valid_set = PlmData(data_path, tokenizer=self.tokenizer, max_len=self.hparams.max_len, \
             premise=self.hparams.premise, hypothesis=self.hparams.hypothesis)
         val_dataloader = DataLoader(

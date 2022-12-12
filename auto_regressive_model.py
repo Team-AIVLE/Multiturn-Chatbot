@@ -87,7 +87,7 @@ class AutoRegressiveModel(LightningModel):
         return torch.LongTensor(data), torch.LongTensor(mask), torch.LongTensor(label)
 
     def train_dataloader(self):
-        data_path = f'{self.hparams.data_dir}/train.csv'
+        data_path = f'{self.hparams.data_dir}/train.parquet'
         self.train_set = AutoRegressionChatData(data_path, max_len=self.hparams.max_len, tokenizer=self.tokenizer)
         train_dataloader = DataLoader(
             self.train_set, batch_size=self.hparams.batch_size, num_workers=2,
@@ -95,7 +95,7 @@ class AutoRegressiveModel(LightningModel):
         return train_dataloader
     
     def val_dataloader(self):
-        data_path = f'{self.hparams.data_dir}/valid.csv'
+        data_path = f'{self.hparams.data_dir}/valid.parquet'
         self.valid_set = AutoRegressionChatData(data_path, max_len=self.hparams.max_len, tokenizer=self.tokenizer)
         val_dataloader = DataLoader(
             self.valid_set, batch_size=self.hparams.batch_size, num_workers=2,
