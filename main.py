@@ -45,11 +45,6 @@ if __name__ == "__main__":
                         default=False,
                         help='for training')
 
-    parser.add_argument('--validation',
-                        action='store_true',
-                        default=False,
-                        help='for validating')
-
     parser.add_argument('--chat',
                         action='store_true',
                         default=False,

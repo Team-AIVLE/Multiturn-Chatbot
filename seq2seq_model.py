@@ -12,7 +12,7 @@ from dataloader import Seq2SeqChatData
 '''
 Description
 -----------
-BART 기반 리액션 대화 모델
+BART 기반 대화 모델
 
 huggingface에 공개된 한국어 사전학습 모델 KoBART \
     gogamza/kobart-base-v2 사용
