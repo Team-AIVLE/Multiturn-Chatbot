@@ -12,7 +12,7 @@ DELIMITER = '<unused1>'
 class AutoRegressionChatData(Dataset):
     """Dataloader for Dialogue Model based on GPT2"""
     def __init__(self, data_path, tokenizer, max_len):
-        self._data = pd.read_csv(data_path, sep=',')
+        self._data = pd.read_parquet(data_path)
         self._data = self._data.dropna(axis=0)
         
         self.usr_token = U_TKN
@@ -59,8 +59,8 @@ class AutoRegressionChatData(Dataset):
     def __getitem__(self, idx):
         turn = self._data.iloc[idx]
         
-        query = turn['proc_query']
-        reply = turn['proc_reply']
+        query = turn['query']
+        reply = turn['reply']
 
         query_toked, reply_toked, query_len, reply_len = \
             self._tokenize_turn(query, reply)
@@ -107,8 +107,8 @@ class Seq2SeqChatData(Dataset):
     def __getitem__(self, index):
         turn = self._data.iloc[index]
         
-        query = turn['proc_query']
-        reply = turn['proc_reply']
+        query = turn['query']
+        reply = turn['reply']
         
         query_toked = [self.tokenizer.bos_token] + \
             self.tokenizer.tokenize(query) + [self.tokenizer.eos_token]
