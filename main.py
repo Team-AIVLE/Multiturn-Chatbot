@@ -112,7 +112,6 @@ if __name__ == "__main__":
                         gradient_clip_val=1.0, 
                         log_every_n_steps=50, 
                         logger=True, 
-                        no_validation=True if not args.validation else False,
                         max_epochs=args.max_epochs, 
                         num_processes=1,
                         accelerator='ddp')
