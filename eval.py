@@ -50,11 +50,11 @@ def eval_ar(args, model, device, test_data):
     u_tkn, s_tkn = U_TKN, S_TKN
     tokenizer = model.tokenizer
 
-    sys_responses = replies = [], []
+    sys_responses, replies = [], []
     with torch.no_grad():
         for d in test_data.iterrows():
             row = d[1]
-            query = row['proc_query']
+            query = row['query']
 
             sys_response = ''
 
@@ -97,11 +97,11 @@ BART 기반 대화 모델 test data에서의 테스트
 def eval_s2s(args, model, device, test_data):
     tokenizer = model.tokenizer
 
-    sys_responses = replies = [], []
+    sys_responses, replies = [], []
     with torch.no_grad():
         for d in test_data.iterrows():
             row = d[1]
-            query = row['proc_query']
+            query = row['query']
 
             # encoding user utterance
             enc_input, attention_mask = encode(tokenizer=tokenizer, \
@@ -237,7 +237,6 @@ def chat_s2s(args, model, device):
             query = input('User Utterance: ')
            
            
-           
 def evaluation(args, **kwargs):
     gpuid = args.gpuid[0]
     device = "cuda:%d" % gpuid
@@ -258,7 +257,7 @@ def evaluation(args, **kwargs):
     model.freeze()
 
     # load test dataset
-    test_data = pd.read_csv(pjoin(args.data_dir, 'test.csv'))
+    test_data = pd.read_parquet(pjoin(args.data_dir, 'test.parquet'))
     test_data = test_data.dropna(axis=0)
 
     if args.model_type == 'bart':
