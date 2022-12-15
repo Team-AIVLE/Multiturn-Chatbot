@@ -25,6 +25,21 @@
 
 <br>
 
+# **Docker**
+
+## **use docker image url**
+
+https://hub.docker.com/_/ubuntu
+```bash
+docker pull ubuntu
+```
+
+## **install requirements**
+
+```bash
+cd Multisession-Chatbot-main
+pip install -r requirements.txt
+```
 
 ## **Building Dataset** 
 
