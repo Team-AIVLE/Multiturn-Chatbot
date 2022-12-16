@@ -37,7 +37,7 @@ docker pull ubuntu
 ## **install requirements**
 
 ```bash
-cd Multisession-Chatbot-main
+cd Multisession-Chatbot
 pip install -r requirements.txt
 ```
 
