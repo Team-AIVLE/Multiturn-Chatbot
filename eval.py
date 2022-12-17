@@ -13,6 +13,8 @@ from utils.model_utils import S_TKN, U_TKN
 from auto_regressive_model import AutoRegressiveModel
 from seq2seq_model import Seq2SeqModel
 
+special = re.compile(r'[^\sA-Za-z0-9가-힣ㄱ-ㅎㅏ-ㅣ@?!~,.ᄒ><\^+]')
+doublespace_pattern = re.compile('\s+')
 repeatchars_pattern = re.compile('(\D)\\1{2,}')
 
 '''
@@ -21,13 +23,14 @@ Description
 생성된 시퀀스 후처리 함수
 '''
 def repeat_normalize(sent, num_repeats=2):
+    sent = special.sub('',sent)
     if num_repeats > 0:
         sent = repeatchars_pattern.sub('\\1' * num_repeats, sent)
-    sent = re.sub('[\s]+', ' ', sent)
+    sent = doublespace_pattern.sub(' ', sent)
     return sent.strip()
 
 def proc_reply(reply):
-    proc_text = re.sub('(<pad>|<unk>)', '', reply)
+    proc_text = re.sub('(<pad>|<unk>|<u>)', '', reply)
     proc_text = repeat_normalize(proc_text, num_repeats=3)
     return proc_text
 
