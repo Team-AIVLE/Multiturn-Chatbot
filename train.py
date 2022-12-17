@@ -44,6 +44,10 @@ if __name__ == "__main__":
                         type=int,
                         default=128)
 
+    parser.add_argument('--k',
+                        type=int,
+                        default=2)
+
     parser.add_argument('--data_dir',
                         type=str,
                         default='data')
