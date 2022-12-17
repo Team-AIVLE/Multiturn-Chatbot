@@ -8,7 +8,7 @@ from iglob import iglob
 from os.path import join as pjoin
 
 from dataloader import DELIMITER
-from utils.data_utils import encode
+from utils.data_utils import *
 from utils.model_utils import S_TKN, U_TKN
 
 from utils.morp_utils import *
@@ -200,5 +200,6 @@ def evaluation(args, **kwargs):
     model.eval()
     model.freeze()
 
+    mkdir_p(args.output_folder)
     eval_model(args, model, device)
     
