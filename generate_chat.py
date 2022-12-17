@@ -45,7 +45,7 @@ def set_seed(seed):
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description='Korean Multisession Dialogue Model')
-    parser.add_argument('--input_folder'
+    parser.add_argument('--input_folder',
                         type=str,
                         default='data')
                         
