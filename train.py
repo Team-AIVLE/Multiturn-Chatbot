@@ -10,7 +10,6 @@ import pytorch_lightning as pl
 
 from auto_regressive_model import AutoRegressiveModel
 from seq2seq_model import Seq2SeqModel
-from eval import evaluation
 
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint
@@ -36,20 +35,11 @@ def set_seed(seed):
     np.random.seed(seed)
     random.seed(seed)
     pl.seed_everything(seed)
+    
 
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description='Korean Dialogue Model')
-    parser.add_argument('--train',
-                        action='store_true',
-                        default=False,
-                        help='for training')
-
-    parser.add_argument('--chat',
-                        action='store_true',
-                        default=False,
-                        help='if True, test on user inputs')
-
     parser.add_argument('--max_len',
                         type=int,
                         default=128)
@@ -86,34 +76,29 @@ if __name__ == "__main__":
     set_seed(SEED)
 
     # finetuning pretrained language model
-    if args.train:
-        with torch.cuda.device(args.gpuid[0]):
-            checkpoint_callback = ModelCheckpoint(
-                dirpath='model_ckpt',
-                filename='{epoch:02d}-{train_loss:.2f}',
-                verbose=True,
-                save_last=False,
-                monitor='train_loss',
-                mode='min',
-            )
+    with torch.cuda.device(args.gpuid[0]):
+        checkpoint_callback = ModelCheckpoint(
+            dirpath='model_ckpt',
+            filename='{epoch:02d}-{train_loss:.2f}',
+            verbose=True,
+            save_last=False,
+            monitor='train_loss',
+            mode='min',
+        )
 
-            model = AutoRegressiveModel(args) if args.model_type == 'gpt2' else Seq2SeqModel(args)
-            model.train()
-            trainer = Trainer(
-                            check_val_every_n_epoch=1, 
-                            checkpoint_callback=checkpoint_callback, 
-                            flush_logs_every_n_steps=100, 
-                            gpus=args.gpuid, 
-                            gradient_clip_val=1.0, 
-                            log_every_n_steps=50, 
-                            logger=True, 
-                            max_epochs=args.max_epochs, 
-                            num_processes=1,
-                            accelerator='ddp')
+        model = AutoRegressiveModel(args) if args.model_type == 'gpt2' else Seq2SeqModel(args)
+        model.train()
+        trainer = Trainer(
+                        check_val_every_n_epoch=1, 
+                        checkpoint_callback=checkpoint_callback, 
+                        flush_logs_every_n_steps=100, 
+                        gpus=args.gpuid, 
+                        gradient_clip_val=1.0, 
+                        log_every_n_steps=50, 
+                        logger=True, 
+                        max_epochs=args.max_epochs, 
+                        num_processes=1,
+                        accelerator='ddp')
             
-            trainer.fit(model)
-            logging.info('best model path {}'.format(checkpoint_callback.best_model_path))
-    else:
-        # testing finetuned language model
-        with torch.cuda.device(args.gpuid[0]):
-            evaluation(args)
+        trainer.fit(model)
+        logging.info('best model path {}'.format(checkpoint_callback.best_model_path))
