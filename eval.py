@@ -15,7 +15,7 @@ from utils.morp_utils import *
 from auto_regressive_model import AutoRegressiveModel
 from seq2seq_model import Seq2SeqModel
 
-special = re.compile(r'[^\sA-Za-z0-9가-힣ㄱ-ㅎㅏ-ㅣ@?!~,.ᄒ><\^+]')
+special = re.compile('[^\sA-Za-z0-9가-힣ㄱ-ㅎㅏ-ㅣ@?!~,.ᄒ><\^+]')
 doublespace_pattern = re.compile('\s+')
 repeatchars_pattern = re.compile('(\D)\\1{2,}')
 
@@ -36,17 +36,12 @@ def proc_reply(reply):
     proc_text = repeat_normalize(proc_text, num_repeats=3)
     return proc_text
 
+
 '''
 Description
 -----------
-사용자 입력이 유효한지 판단
+k개의 발화를 사용하여 input context를 생성하는 함수
 '''
-def is_valid(query):
-    if not re.sub('[\s]+', '', query):
-        return False
-    return True
-
-
 def make_query(dialog, k=2):
     query = dialog[-k]
     for utt in dialog[-k + 1:]:
@@ -58,7 +53,7 @@ Description
 -----------
 Autoregressive Model을 이용한 reply 생성 함수
 '''
-def reply_ar_greedy(args, model, tokenizer, device, query):
+def reply_ar(args, model, tokenizer, device, query):
     u_tkn, s_tkn = U_TKN, S_TKN
             
     sys_response = ''
@@ -92,7 +87,7 @@ Description
 -----------
 Sequence-to-Sequence Model을 이용한 reply 생성 함수
 '''
-def reply_s2s_greedy(args, model, tokenizer, device, query):            
+def reply_s2s(args, model, tokenizer, device, query):            
     # encoding user utterance
     enc_input, attention_mask = encode(tokenizer=tokenizer, \
         sent=tokenizer.bos_token+query+tokenizer.eos_token, \
@@ -147,10 +142,10 @@ def eval_model(args, model, device):
                 session = entire_info['sessionInfo'][0]
                     
                 # Get prev-session information
-                prev_time = session['prevTimeInfo']['timeNum'] + session['prevTimeInfo']['timeUnit']
+                # prev_time = session['prevTimeInfo']['timeNum'] + session['prevTimeInfo']['timeUnit']
                 persona = entire_info['personaInfo']['clInfo']['personaFeatures']
                 persona_kw = ' '.join(extract_keyword(persona))
-                prev_info = persona_kw + DELIMITER + prev_time
+                prev_info = persona_kw
                     
                 result = pd.DataFrame(columns=['sent_type', 'sent', '이전 세션 정보 사용', '적절한 발화 여부'])
                 # Append Speaker Persona Summary
@@ -169,12 +164,13 @@ def eval_model(args, model, device):
                         'sent_type' : utt['speaker'],
                         'sent' : utt['utterance'],
                     }, ignore_index=True)
+                    
                 # Make Context
-                context = prev_info + DELIMITER + make_query(session, k=k)
+                context = prev_info + DELIMITER + make_query(session, k=args.k)
                 if args.model_type == 'gpt2':
-                    reply = reply_ar_greedy(args, model, tokenizer, device, context)
+                    reply = reply_ar(args, model, tokenizer, device, context)
                 else:
-                    reply = reply_s2s_greedy(args, model, tokenizer, device, context)
+                    reply = reply_s2s(args, model, tokenizer, device, context)
                         
                 result = result.append({
                     'sent_type': 'speaker_1_generated',
@@ -204,11 +200,5 @@ def evaluation(args, **kwargs):
     model.eval()
     model.freeze()
 
-    # load test dataset
-    test_data = pd.read_parquet(pjoin(args.data_dir, 'test.parquet'))
-    test_data = test_data.dropna(axis=0)
-
-    if args.model_type == 'bart':
-        eval_s2s(args, model, device, test_data)
-    else:
-        eval_ar(args, model, device, test_data)
+    eval_model(args, model, device)
+    

@@ -71,6 +71,9 @@ if __name__ == "__main__":
 
     # random seed 고정
     set_seed(SEED)
+    
+    # max_len, k 설정
+    base_setting(args)
 
     # testing finetuned language model
     with torch.cuda.device(args.gpuid[0]):
