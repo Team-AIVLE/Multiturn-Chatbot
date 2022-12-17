@@ -1,15 +1,17 @@
 
 # -*- coding: utf-8 -*-
 
-import re
+import re, json
 import torch
 import pandas as pd
+from iglob import iglob
 from os.path import join as pjoin
 
 from dataloader import DELIMITER
 from utils.data_utils import encode
 from utils.model_utils import S_TKN, U_TKN
 
+from utils.morp_utils import *
 from auto_regressive_model import AutoRegressiveModel
 from seq2seq_model import Seq2SeqModel
 
@@ -44,200 +46,143 @@ def is_valid(query):
         return False
     return True
 
+
+def make_query(dialog, k=2):
+    query = dialog[-k]
+    for utt in dialog[-k + 1:]:
+        query += DELIMITER + utt['utterance']
+    return query
+
+'''
+Description
+-----------
+Autoregressive Model을 이용한 reply 생성 함수
+'''
+def reply_ar_greedy(args, model, tokenizer, device, query):
+    u_tkn, s_tkn = U_TKN, S_TKN
+            
+    sys_response = ''
+
+    # encodinig user utterance
+    q_toked = tokenizer.tokenize(u_tkn + query)
+    if len(q_toked) >= args.max_len:
+        q_toked = [q_toked[0]] + q_toked[-(int(args.max_len/2))+1:]
+
+    # inference
+    for iter_ in range(args.max_len):
+        a_toked = tokenizer.tokenize(s_tkn + sys_response)
+        token_ids = torch.LongTensor(tokenizer.convert_tokens_to_ids(\
+            q_toked + a_toked)).to(device=device)
+
+        logits = model(token_ids)
+        gen = tokenizer.convert_ids_to_tokens(torch.argmax(logits, \
+            dim=-1).squeeze().cpu().tolist())[-1]
+        if gen == tokenizer.eos_token:
+            break
+        sys_response += gen.replace('▁', ' ')
+
+    sys_response= sys_response.strip()
+    reply = proc_reply(sys_response)
+
+    return reply
+    
+
+'''
+Description
+-----------
+Sequence-to-Sequence Model을 이용한 reply 생성 함수
+'''
+def reply_s2s_greedy(args, model, tokenizer, device, query):            
+    # encoding user utterance
+    enc_input, attention_mask = encode(tokenizer=tokenizer, \
+        sent=tokenizer.bos_token+query+tokenizer.eos_token, \
+        max_len=args.max_len)
+
+    enc_input = torch.LongTensor(enc_input).unsqueeze(0).to(device=device)
+    attention_mask = torch.FloatTensor(attention_mask).unsqueeze(0).to(device=device)
+
+    sys_response = ''
+
+    # inference
+    for iter_ in range(args.max_len-1):
+        dec_input, dec_attention_mask = encode(tokenizer=tokenizer, \
+            sent=tokenizer.bos_token+sys_response, max_len=args.max_len)
+
+        dec_input = torch.LongTensor(dec_input).unsqueeze(0).to(device=device)
+        dec_attention_mask = torch.FloatTensor(dec_attention_mask).unsqueeze(0).to(device=device)
+    
+        inputs = {
+            "input_ids": enc_input,
+            "attention_mask" : attention_mask,
+            "decoder_input_ids" : dec_input,
+            "decoder_attention_mask" : dec_attention_mask,
+            "labels": None
+        }
+        outs = model(inputs)
+        gen = tokenizer.convert_ids_to_tokens(torch.argmax(outs.logits,\
+            dim=-1).squeeze().cpu().tolist())[-1]
+        if gen == tokenizer.eos_token:
+            break
+        sys_response += gen.replace('▁', ' ')
+
+    sys_response = sys_response.strip()
+    reply = proc_reply(sys_response)
+            
+    return reply
+    
+    
 '''
 Description
 -----------
 GPT2 기반 대화 모델 test data에서의 테스트
 '''
-def eval_ar(args, model, device, test_data):
-    u_tkn, s_tkn = U_TKN, S_TKN
+def eval_model(args, model, device):
     tokenizer = model.tokenizer
-
-    sys_responses, replies = [], []
-    with torch.no_grad():
-        for d in test_data.iterrows():
-            row = d[1]
-            query = row['query']
-
-            sys_response = ''
-
-            # encodinig user utterance
-            q_toked = tokenizer.tokenize(u_tkn + query)
-            if len(q_toked) >= args.max_len:
-                q_toked = [q_toked[0]] + q_toked[-(int(args.max_len/2))+1:]
-
-            # inference
-            for iter_ in range(args.max_len):
-                a_toked = tokenizer.tokenize(s_tkn + sys_response)
-                token_ids = torch.LongTensor(tokenizer.convert_tokens_to_ids(\
-                    q_toked + a_toked)).to(device=device)
-
-                logits = model(token_ids)
-                gen = tokenizer.convert_ids_to_tokens(torch.argmax(logits, \
-                    dim=-1).squeeze().cpu().tolist())[-1]
-                if gen == tokenizer.eos_token:
-                    break
-                sys_response += gen.replace('▁', ' ')
-
-            sys_response= sys_response.strip()
-            print("Sys Response: {}".format(sys_response))
-
-            reply = proc_reply(sys_response)
-            
-            sys_responses.append(sys_response)
-            replies.append(reply)
-
-        # save test result to <save_dir>
-        test_data['system_response'] = sys_responses
-        test_data['gen_reply'] = replies
-        test_data.to_csv(f'{args.save_dir}/{args.model_name}.csv', index=False)
     
-'''
-Description
------------
-BART 기반 대화 모델 test data에서의 테스트
-'''
-def eval_s2s(args, model, device, test_data):
-    tokenizer = model.tokenizer
-
-    sys_responses, replies = [], []
     with torch.no_grad():
-        for d in test_data.iterrows():
-            row = d[1]
-            query = row['query']
-
-            # encoding user utterance
-            enc_input, attention_mask = encode(tokenizer=tokenizer, \
-                sent=tokenizer.bos_token+query+tokenizer.eos_token, \
-                max_len=args.max_len)
-
-            enc_input = torch.LongTensor(enc_input).unsqueeze(0).to(device=device)
-            attention_mask = torch.FloatTensor(attention_mask).unsqueeze(0).to(device=device)
-
-            sys_response = ''
-
-            # inference
-            for iter_ in range(args.max_len-1):
-                dec_input, dec_attention_mask = encode(tokenizer=tokenizer, \
-                    sent=tokenizer.bos_token+sys_response, max_len=args.max_len)
-
-                dec_input = torch.LongTensor(dec_input).unsqueeze(0).to(device=device)
-                dec_attention_mask = torch.FloatTensor(dec_attention_mask).unsqueeze(0).to(device=device)
-    
-                inputs = {
-                    "input_ids": enc_input,
-                    "attention_mask" : attention_mask,
-                    "decoder_input_ids" : dec_input,
-                    "decoder_attention_mask" : dec_attention_mask,
-                    "labels": None
-                }
-                outs = model(inputs)
-                gen = tokenizer.convert_ids_to_tokens(torch.argmax(outs.logits,\
-                    dim=-1).squeeze().cpu().tolist())[-1]
-                if gen == tokenizer.eos_token:
-                    break
-                sys_response += gen.replace('▁', ' ')
-
-            sys_response = sys_response.strip()
-            reply = proc_reply(sys_response)
-            
-            sys_responses.append(sys_response)
-            replies.append(reply)
-
-            print("User Utterance: {}".format(query))
-            print("Reply: {}".format(reply))
         
-        # save test result to <save_dir>
-        test_data['system_response'] = sys_responses
-        test_data['gen_reply'] = replies
-        test_data.to_csv(f'{args.save_dir}/{args.model_name}.csv', index=False)
-    
-'''
-Description
------------
-GPT2 기반 대화 모델 사용자 입력에 대한 테스트
-'''
-def chat_ar(args, model, device):
-    u_tkn, s_tkn = U_TKN, S_TKN
-    tokenizer = model.tokenizer
+        for path in iglob(pjoin(args.input_folder, "**.json")):
+            with open(path, encoding="UTF-8") as f:
+                entire_info = json.load(f)
+                session = entire_info['sessionInfo'][0]
+                    
+                # Get prev-session information
+                prev_time = session['prevTimeInfo']['timeNum'] + session['prevTimeInfo']['timeUnit']
+                persona = entire_info['personaInfo']['clInfo']['personaFeatures']
+                persona_kw = ' '.join(extract_keyword(persona))
+                prev_info = persona_kw + DELIMITER + prev_time
+                    
+                result = pd.DataFrame(columns=['sent_type', 'sent', '이전 세션 정보 사용', '적절한 발화 여부'])
+                # Append Speaker Persona Summary
+                result = result.append({
+                    'sent_type': 'speaker_1_summary',
+                    'sent': '\n'.join(entire_info['prevAggregatedpersonaSummary']['speaker1']),
+                }, ignore_index=True)
+                result = result.append({
+                    'sent_type': 'speaker_2_summary',
+                    'sent': '\n'.join(entire_info['prevAggregatedpersonaSummary']['speaker2']),
+                }, ignore_index=True)
+                    
+                # Append Dialogue
+                for utt in session['dialog']:
+                    result = result.append({
+                        'sent_type' : utt['speaker'],
+                        'sent' : utt['utterance'],
+                    }, ignore_index=True)
+                # Make Context
+                context = prev_info + DELIMITER + make_query(session, k=k)
+                if args.model_type == 'gpt2':
+                    reply = reply_ar_greedy(args, model, tokenizer, device, context)
+                else:
+                    reply = reply_s2s_greedy(args, model, tokenizer, device, context)
+                        
+                result = result.append({
+                    'sent_type': 'speaker_1_generated',
+                    'sent': reply,
+                }, ignore_index=True)
 
-    query = input('User Utterance: ')
-    with torch.no_grad():
-        while is_valid(query):
-            sys_response = ''
-
-            # encoding user utterance
-            q_toked = tokenizer.tokenize(u_tkn + query)
-            if len(q_toked) >= args.max_len:
-                query_toked = query_toked[-(int(args.max_len/2)):]
-
-            # inference
-            for iter_ in range(args.max_len):
-                a_toked = tokenizer.tokenize(s_tkn + sys_response)
-                token_ids = torch.LongTensor(tokenizer.convert_tokens_to_ids(\
-                    q_toked + a_toked)).to(device=device)
-
-                logits = model(token_ids)
-                gen = tokenizer.convert_ids_to_tokens(torch.argmax(logits, \
-                    dim=-1).squeeze().cpu().tolist())[-1]
-                if gen == tokenizer.eos_token:
-                    break
-                sys_response += gen.replace('▁', ' ')
-            sys_response = sys_response.strip()
-
-
-            reply = proc_reply(sys_response)
-            print("Reply: {}".format(reply))
-
-            query = input('User Utterance: ')
-
-'''
-Description
------------
-BART 기반 대화 모델 사용자 입력에 대한 테스트
-'''
-def chat_s2s(args, model, device):
-    tokenizer = model.tokenizer
-
-    query = input('User Utterance: ')
-    with torch.no_grad():
-        while is_valid(query):
-            # encoding user utterance
-            enc_input, attention_mask = encode(tokenizer=tokenizer, \
-                sent=tokenizer.bos_token+query+tokenizer.eos_token, \
-                max_len=args.max_len)
-            enc_input = torch.LongTensor(enc_input).unsqueeze(0).to(device=device)
-            attention_mask = torch.FloatTensor(attention_mask).unsqueeze(0).to(device=device)
-
-            sys_response = ''
-
-            # inference
-            for iter_ in range(args.max_len-1):
-                dec_input, dec_attention_mask = encode(tokenizer=tokenizer, \
-                    sent=tokenizer.bos_token+sys_response, max_len=args.max_len)
-
-                dec_input = torch.LongTensor(dec_input).unsqueeze(0).to(device=device)
-                dec_attention_mask = torch.FloatTensor(dec_attention_mask).unsqueeze(0).to(device=device)
-    
-                inputs = {
-                    "input_ids": enc_input,
-                    "attention_mask" : attention_mask,
-                    "decoder_input_ids" : dec_input,
-                    "decoder_attention_mask" : dec_attention_mask,
-                    "labels": None
-                }
-                outs = model(inputs)
-                gen = tokenizer.convert_ids_to_tokens(torch.argmax(outs.logits, \
-                    dim=-1).squeeze().cpu().tolist())[-1]
-                if gen == tokenizer.eos_token:
-                    break
-                sys_response += gen.replace('▁', ' ')
-            sys_response = sys_response.strip()
-
-            reply = proc_reply(sys_response)
-            print("Reply: {}".format(reply))
-            
-            query = input('User Utterance: ')
+                filename = entire_info['FileInfo']['filename'].replace("json", "xlsx")
+                result.to_excel(pjoin(args.output_folder, filename), index=False, encoding='utf-8')
            
            
 def evaluation(args, **kwargs):
@@ -264,12 +209,6 @@ def evaluation(args, **kwargs):
     test_data = test_data.dropna(axis=0)
 
     if args.model_type == 'bart':
-        if args.chat:
-            chat_s2s(args, model, device)
-        else:
-            eval_s2s(args, model, device, test_data)
+        eval_s2s(args, model, device, test_data)
     else:
-        if args.chat:
-            chat_ar(args, model, device)
-        else:
-            eval_ar(args, model, device, test_data)
+        eval_ar(args, model, device, test_data)

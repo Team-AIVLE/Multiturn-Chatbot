@@ -54,7 +54,7 @@ if __name__ == "__main__":
                         type=int,
                         default=128)
 
-    parser.add_argument('--data_dir',
+    parser.add_argument('--data_dir'
                         type=str,
                         default='data')
                         
@@ -87,32 +87,32 @@ if __name__ == "__main__":
 
     # finetuning pretrained language model
     if args.train:
-        checkpoint_callback = ModelCheckpoint(
-            dirpath='model_ckpt',
-            filename='{epoch:02d}-{train_loss:.2f}',
-            verbose=True,
-            save_last=False,
-            monitor='train_loss',
-            mode='min',
-            prefix=f'{args.model_name}'
-        )
+        with torch.cuda.device(args.gpuid[0]):
+            checkpoint_callback = ModelCheckpoint(
+                dirpath='model_ckpt',
+                filename='{epoch:02d}-{train_loss:.2f}',
+                verbose=True,
+                save_last=False,
+                monitor='train_loss',
+                mode='min',
+            )
 
-        model = AutoRegressiveModel(args) if args.model_type == 'gpt2' else Seq2SeqModel(args)
-        model.train()
-        trainer = Trainer(
-                        check_val_every_n_epoch=1, 
-                        checkpoint_callback=checkpoint_callback, 
-                        flush_logs_every_n_steps=100, 
-                        gpus=args.gpuid, 
-                        gradient_clip_val=1.0, 
-                        log_every_n_steps=50, 
-                        logger=True, 
-                        max_epochs=args.max_epochs, 
-                        num_processes=1,
-                        accelerator='ddp')
-        
-        trainer.fit(model)
-        logging.info('best model path {}'.format(checkpoint_callback.best_model_path))
+            model = AutoRegressiveModel(args) if args.model_type == 'gpt2' else Seq2SeqModel(args)
+            model.train()
+            trainer = Trainer(
+                            check_val_every_n_epoch=1, 
+                            checkpoint_callback=checkpoint_callback, 
+                            flush_logs_every_n_steps=100, 
+                            gpus=args.gpuid, 
+                            gradient_clip_val=1.0, 
+                            log_every_n_steps=50, 
+                            logger=True, 
+                            max_epochs=args.max_epochs, 
+                            num_processes=1,
+                            accelerator='ddp')
+            
+            trainer.fit(model)
+            logging.info('best model path {}'.format(checkpoint_callback.best_model_path))
     else:
         # testing finetuned language model
         with torch.cuda.device(args.gpuid[0]):
