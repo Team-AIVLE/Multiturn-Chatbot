@@ -32,8 +32,19 @@ def repeat_normalize(sent, num_repeats=2):
     sent = doublespace_pattern.sub(' ', sent)
     return sent.strip()
 
+def remove_overlapped_word(text):
+    splited_txt = text.split(" ")
+
+    result = []
+    for wrd in splited_txt:
+        if wrd in result: continue
+        result += [wrd]
+
+    return ' '.join(result)
+
 def proc_reply(reply):
     proc_text = re.sub('(<pad>|<unk>|<u>)', '', reply)
+    proc_text = remove_overlapped_word(proc_text)
     proc_text = repeat_normalize(proc_text, num_repeats=3)
     return proc_text
 
