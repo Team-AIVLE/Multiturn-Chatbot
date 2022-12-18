@@ -52,6 +52,7 @@ class AutoRegressiveModel(LightningModel):
         loss = self.loss_function(mask_out.transpose(2, 1), label)
         loss_avg = loss.sum() / mask.sum()
         return loss_avg
+    
 
     def validation_epoch_end(self, outputs):
         avg_losses = []
@@ -88,7 +89,7 @@ class AutoRegressiveModel(LightningModel):
 
     def train_dataloader(self):
         data_path = f'{self.hparams.data_dir}/train.parquet'
-        self.train_set = AutoRegressionChatData(data_path, max_len=self.hparams.max_len, tokenizer=self.tokenizer)
+        self.train_set = AutoRegressionChatData(data_path, max_len=self.hparams.max_len, tokenizer=self.tokenizer, k=self.hparams.k)
         train_dataloader = DataLoader(
             self.train_set, batch_size=self.hparams.batch_size, num_workers=2,
             shuffle=False, collate_fn=self._collate_fn)
@@ -96,7 +97,7 @@ class AutoRegressiveModel(LightningModel):
     
     def val_dataloader(self):
         data_path = f'{self.hparams.data_dir}/valid.parquet'
-        self.valid_set = AutoRegressionChatData(data_path, max_len=self.hparams.max_len, tokenizer=self.tokenizer)
+        self.valid_set = AutoRegressionChatData(data_path, max_len=self.hparams.max_len, tokenizer=self.tokenizer, k=self.hparams.k)
         val_dataloader = DataLoader(
             self.valid_set, batch_size=self.hparams.batch_size, num_workers=2,
             shuffle=False, collate_fn=self._collate_fn)
