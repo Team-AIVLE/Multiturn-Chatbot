@@ -157,6 +157,10 @@ def build_multiturn_dataset(args):
         save_parquet(mt_data, pjoin(args.output_folder, f"{filename}"))
         
 def preprocess_dataset(args):
+    mkdir_p(args.proc_folder)
+    mkdir_p(args.origin_folder)
+    mkdir_p(args.output_folder)
+
     # json 파일을 Dataframe 형태로 변환
     # 각 발화자의 페르소나 추출
     train_persona, valid_persona = json_to_parquet(args)
@@ -168,4 +172,5 @@ def preprocess_dataset(args):
     build_with_persona(args, train_persona, valid_persona)
     
     # 멀티턴 데이터셋 구축 (k개의 턴을 사용)
+
     build_multiturn_dataset(args)
