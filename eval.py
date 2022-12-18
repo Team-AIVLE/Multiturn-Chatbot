@@ -25,6 +25,7 @@ Description
 생성된 시퀀스 후처리 함수
 '''
 def repeat_normalize(sent, num_repeats=2):
+    sent = sent.split('<unused1>')[0]
     sent = special.sub('',sent)
     if num_repeats > 0:
         sent = repeatchars_pattern.sub('\\1' * num_repeats, sent)
