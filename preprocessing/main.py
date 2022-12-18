@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
     # random seed 고정
     set_seed(SEED)
-    
+    base_setting(args)
     preprocess_dataset(args)
     
     
