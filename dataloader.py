@@ -36,7 +36,7 @@ class AutoRegressionChatData(Dataset):
             + self.tokenizer.eos_token)
         
         
-        context_len = self.max_len - 32
+        context_len = self.max_len - 64
         if query_len + reply_len > self.max_len:
             remain = self.max_len - query_len
             if remain <= 0:

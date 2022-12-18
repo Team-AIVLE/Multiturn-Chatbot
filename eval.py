@@ -4,7 +4,7 @@
 import re, json
 import torch
 import pandas as pd
-from iglob import iglob
+from glob import iglob
 from os.path import join as pjoin
 
 from dataloader import DELIMITER
@@ -55,7 +55,8 @@ Description
 k개의 발화를 사용하여 input context를 생성하는 함수
 '''
 def make_query(dialog, k=2):
-    query = dialog[-k]
+    if not dialog: return ' '
+    query = dialog[-k]['utterance']
     for utt in dialog[-k + 1:]:
         query += DELIMITER + utt['utterance']
     return query
@@ -70,14 +71,14 @@ def reply_ar(args, model, tokenizer, device, query):
             
     sys_response = ''
 
-    context_len = args.max_len - 32
+    context_len = args.max_len - 64
     # encodinig user utterance
     q_toked = tokenizer.tokenize(u_tkn + query)
     if len(q_toked) >= args.max_len:
         q_toked = [q_toked[0]] + q_toked[-(int(context_len))+1:]
 
     # inference
-    for iter_ in range(32):
+    for iter_ in range(64):
         a_toked = tokenizer.tokenize(s_tkn + sys_response)
         token_ids = torch.LongTensor(tokenizer.convert_tokens_to_ids(\
             q_toked + a_toked)).to(device=device)
@@ -155,7 +156,7 @@ def eval_model(args, model, device):
                 session = entire_info['sessionInfo'][0]
                     
                 # Get prev-session information
-                # prev_time = session['prevTimeInfo']['timeNum'] + session['prevTimeInfo']['timeUnit']
+                prev_time = session['prevTimeInfo']['timeNum'] + session['prevTimeInfo']['timeUnit']
                 persona = entire_info['personaInfo']['clInfo']['personaFeatures']
                 persona_kw = ' '.join(extract_keyword(persona))
                 prev_info = persona_kw
@@ -164,11 +165,11 @@ def eval_model(args, model, device):
                 # Append Speaker Persona Summary
                 result = result.append({
                     'sent_type': 'speaker_1_summary',
-                    'sent': '\n'.join(entire_info['prevAggregatedpersonaSummary']['speaker1']),
+                    'sent': '\n'.join(session['prevAggregatedpersonaSummary']['speaker1']),
                 }, ignore_index=True)
                 result = result.append({
                     'sent_type': 'speaker_2_summary',
-                    'sent': '\n'.join(entire_info['prevAggregatedpersonaSummary']['speaker2']),
+                    'sent': '\n'.join(session['prevAggregatedpersonaSummary']['speaker2']),
                 }, ignore_index=True)
                     
                 # Append Dialogue
@@ -179,12 +180,19 @@ def eval_model(args, model, device):
                     }, ignore_index=True)
                     
                 # Make Context
-                context = prev_info + DELIMITER + make_query(session, k=args.k)
+                # context = prev_info + DELIMITER + make_query(session, k=args.k)
+                context = make_query(session['dialog'], k=args.k)
+
                 if args.model_type == 'gpt2':
                     reply = reply_ar(args, model, tokenizer, device, context)
                 else:
                     reply = reply_s2s(args, model, tokenizer, device, context)
-                        
+                if not session['dialog']:
+                    if len(prev_time) > 0: 
+                        reply = f"안녕하세요. {prev_time}만이네요"
+                    else:
+                        reply = "안녕하세요. 반가워요"
+
                 result = result.append({
                     'sent_type': 'speaker_1_generated',
                     'sent': reply,
