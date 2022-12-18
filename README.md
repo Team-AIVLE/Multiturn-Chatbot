@@ -31,11 +31,48 @@
 
 nvcr.io/nvidia/tensorflow:20.03-tf2-py3
 
+### 1. Nvidia Container Toolkit 설치
+WSL 환경에서 CUDA를 사용하기 위해 WSL에서 UBUNTU에서 아래 명령어 실행
+```bash
+distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
+curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
+```
+
+### 2. NVIDIA runtime package 설치
+```bash
+sudo apt-get update
+sudo apt-get install -y nvidia-docker2
+```
+
+### 3. docker restart
+```bash
+sudo service docker stop
+sudo service docker start
+```
+
+### 4. dock image 다운 및 컨테이너 실행
+bot 이라는 이름으로 실행
+```bash
+docker run --gpus all -it --name bot --shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864 nvcr.io/nvidia/tensorflow:20.03-tf2-py3
+```
+
+### 5. 기본 update 및 필수 패키지 다운
+```bash
+apt-get update && apt-get -y install sudo
+apt-get upgrade
+```
+
 ## **install requirements**
 
 ```bash
 cd Multisession-Chatbot
 pip install -r requirements.txt
+```
+
+if HOROVOD 오류일시
+```bash
+HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir --upgrade --force-reinstall horovod && ldconfig
 ```
 
 ## **Building Dataset** 
