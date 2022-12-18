@@ -15,7 +15,7 @@ class LightningModel(LightningModule):
         parser = argparse.ArgumentParser(parents=[parent_parser], add_help=False)
         parser.add_argument('--batch_size',
                             type=int,
-                            default=4,
+                            default=16,
                             help='batch size for training (default: 96)')
         parser.add_argument('--lr',
                             type=float,

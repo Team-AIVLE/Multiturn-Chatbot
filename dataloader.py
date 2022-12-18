@@ -36,12 +36,12 @@ class AutoRegressionChatData(Dataset):
             + self.tokenizer.eos_token)
         
         
-        n_pad = self.k / (self.k + 1)
+        context_len = self.max_len - 32
         if query_len + reply_len > self.max_len:
             remain = self.max_len - query_len
             if remain <= 0:
                 # query가 max_len을 넘어가는 경우, max_len의 반절로 제한
-                query_toked = [query_toked[0]] + query_toked[-(int(self.max_len * n_pad))+1:] 
+                query_toked = [query_toked[0]] + query_toked[-(int(context_len))+1:] 
                 query_len = len(query_toked)
                 remain = self.max_len - query_len
                 assert remain > 0

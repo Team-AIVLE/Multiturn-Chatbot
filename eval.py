@@ -59,13 +59,14 @@ def reply_ar(args, model, tokenizer, device, query):
             
     sys_response = ''
 
+    context_len = args.max_len - 32
     # encodinig user utterance
     q_toked = tokenizer.tokenize(u_tkn + query)
     if len(q_toked) >= args.max_len:
-        q_toked = [q_toked[0]] + q_toked[-(int(args.max_len/2))+1:]
+        q_toked = [q_toked[0]] + q_toked[-(int(context_len))+1:]
 
     # inference
-    for iter_ in range(args.max_len):
+    for iter_ in range(32):
         a_toked = tokenizer.tokenize(s_tkn + sys_response)
         token_ids = torch.LongTensor(tokenizer.convert_tokens_to_ids(\
             q_toked + a_toked)).to(device=device)
