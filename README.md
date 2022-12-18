@@ -75,6 +75,9 @@ if HOROVOD 오류일시
 HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir --upgrade --force-reinstall horovod && ldconfig
 ```
 
+if gpu = [] 오류일시
+pytorch와 cuda의 버전 차이때문이므로 cuda와 pytorch의 버전을 맞춰줌 
+
 ## **Building Dataset** 
 
 
