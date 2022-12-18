@@ -29,10 +29,7 @@
 
 ## **use docker image url**
 
-https://hub.docker.com/_/ubuntu
-```bash
-docker pull ubuntu
-```
+nvcr.io/nvidia/tensorflow:20.03-tf2-py3
 
 ## **install requirements**
 
