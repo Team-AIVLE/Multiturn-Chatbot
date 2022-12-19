@@ -25,7 +25,8 @@
 
 ## **use docker image url**
 
-nvcr.io/nvidia/tensorflow:20.03-tf2-py3
+pytorch/pytorch:1.6.0-cuda10.1-cudnn7-devel
+https://hub.docker.com/layers/pytorch/pytorch/1.6.0-cuda10.1-cudnn7-devel/images/sha256-ccebb46f954b1d32a4700aaeae0e24bd68653f92c6f276a608bf592b660b63d7?context=explore
 
 ### 1. Nvidia Container Toolkit 설치
 WSL 환경에서 CUDA를 사용하기 위해 WSL에서 UBUNTU에서 아래 명령어 실행
@@ -50,7 +51,7 @@ sudo service docker start
 ### 4. dock image 다운 및 컨테이너 실행
 bot 이라는 이름으로 실행
 ```bash
-docker run --gpus all -it --name bot --shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864 nvcr.io/nvidia/tensorflow:20.03-tf2-py3
+docker run --gpus all -it --name bot --shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864 pytorch/pytorch:1.6.0-cuda10.1-cudnn7-devel
 ```
 
 ### 5. 기본 update 및 필수 패키지 다운
@@ -166,6 +167,7 @@ data_dir
 ```bash
 python train.py --max_epochs 10 --data_dir data/ --model_type gpt2 --max_len 256 --reply_len 64 --gpuid 0
 ```
+batch size의 default는 16이며 만약 CUDA out of memory가 난다면 batch size를 8, 4 .. 로 줄여야 함
 
 <br>
 
