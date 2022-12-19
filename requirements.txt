@@ -5,3 +5,4 @@ seaborn
 pyarrow
 fastparquet
 numpy==1.21.0
+openpyxl
