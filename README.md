@@ -83,9 +83,9 @@ pytorch와 cuda의 버전 차이때문이므로 cuda와 pytorch의 버전을 맞
 ### 1. install package
 
 ```bash
-sudo apt-get install g++ openjdk-8-jdk python3-dev python3-pip curl : Install Java 1.8 or up
+sudo apt-get install g++ openjdk-8-jdk python3-dev python3-pip curl         : Install Java 1.8 or up
 python3 -m pip install konlpy
-sudo apt-get install curl git : Mecab 설치 필요시 시행
+sudo apt-get install curl git                                               : Mecab 설치 필요시 시행
 bash <(curl -s https://raw.githubusercontent.com/konlpy/konlpy/master/scripts/mecab.sh)
 ```
 
