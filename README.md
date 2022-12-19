@@ -58,6 +58,10 @@ docker run --gpus all -it --name bot --shm-size=1g --ulimit memlock=-1 --ulimit 
 apt-get update && apt-get -y install sudo
 apt-get upgrade
 ```
+if GPG error 
+```bash
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC
+```
 
 ## **install requirements**
 
