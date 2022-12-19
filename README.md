@@ -168,7 +168,7 @@ data_dir
 ```bash
 python train.py --max_epochs 10 --data_dir data/ --model_type gpt2 --max_len 256 --reply_len 64 --gpuid 0
 ```
-batch size의 default는 16이며 만약 CUDA out of memory가 난다면 batch size를 8, 4 .. 로 줄여야 함
+batch size의 default는 16이며 만약 CUDA out of memory가 난다면 훈련 커맨드에 --batch size 8 를 추가해 batch size를 조절함
 
 <br>
 
