@@ -1,7 +1,7 @@
 
 # -*- coding: utf-8 -*-
 
-import re, json
+import re, json, time
 import torch
 import pandas as pd
 from glob import iglob
@@ -151,6 +151,7 @@ def eval_model(args, model, device):
     with torch.no_grad():
         
         for path in iglob(pjoin(args.input_folder, "**.json")):
+            stt_time = time.time()
             with open(path, encoding="UTF-8") as f:
                 entire_info = json.load(f)
                 session = entire_info['sessionInfo'][0]
@@ -187,7 +188,8 @@ def eval_model(args, model, device):
                     reply = reply_ar(args, model, tokenizer, device, context)
                 else:
                     reply = reply_s2s(args, model, tokenizer, device, context)
-                    
+                
+                print(time.time() - stt_time)
                 # if not session['dialog']:
                 #     if len(prev_time) > 0: 
                 #         reply = f"안녕하세요. {prev_time}만이네요"
