@@ -54,7 +54,7 @@ Description
 -----------
 k개의 발화를 사용하여 input context를 생성하는 함수
 '''
-def make_query(dialog, k=2):
+def make_query(dialog):
     if not dialog: return ' '
     query = dialog[0]['utterance']
     for utt in dialog:
@@ -181,7 +181,7 @@ def eval_model(args, model, device):
                     
                 # Make Context
                 # context = prev_info + DELIMITER + make_query(session, k=args.k)
-                context = make_query(session['dialog'], reply_len=args.reply_len)
+                context = make_query(session['dialog'])
 
                 if args.model_type == 'gpt2':
                     reply = reply_ar(args, model, tokenizer, device, context)
@@ -224,4 +224,3 @@ def evaluation(args, **kwargs):
 
     mkdir_p(args.output_folder)
     eval_model(args, model, device)
-    
