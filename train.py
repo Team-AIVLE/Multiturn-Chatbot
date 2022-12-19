@@ -44,9 +44,9 @@ if __name__ == "__main__":
                         type=int,
                         default=128)
 
-    parser.add_argument('--k',
+    parser.add_argument('--reply_len',
                         type=int,
-                        default=2)
+                        default=64)
 
     parser.add_argument('--data_dir',
                         type=str,

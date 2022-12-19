@@ -56,8 +56,8 @@ k개의 발화를 사용하여 input context를 생성하는 함수
 '''
 def make_query(dialog, k=2):
     if not dialog: return ' '
-    query = dialog[-k]['utterance']
-    for utt in dialog[-k + 1:]:
+    query = dialog[0]['utterance']
+    for utt in dialog:
         query += DELIMITER + utt['utterance']
     return query
 
@@ -71,14 +71,14 @@ def reply_ar(args, model, tokenizer, device, query):
             
     sys_response = ''
 
-    context_len = args.max_len - 64
+    context_len = args.max_len - args.reply_len
     # encodinig user utterance
     q_toked = tokenizer.tokenize(u_tkn + query)
     if len(q_toked) >= args.max_len:
         q_toked = [q_toked[0]] + q_toked[-(int(context_len))+1:]
 
     # inference
-    for iter_ in range(64):
+    for iter_ in range(args.reply_len):
         a_toked = tokenizer.tokenize(s_tkn + sys_response)
         token_ids = torch.LongTensor(tokenizer.convert_tokens_to_ids(\
             q_toked + a_toked)).to(device=device)
@@ -181,7 +181,7 @@ def eval_model(args, model, device):
                     
                 # Make Context
                 # context = prev_info + DELIMITER + make_query(session, k=args.k)
-                context = make_query(session['dialog'], k=args.k)
+                context = make_query(session['dialog'], reply_len=args.reply_len)
 
                 if args.model_type == 'gpt2':
                     reply = reply_ar(args, model, tokenizer, device, context)

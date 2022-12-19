@@ -11,7 +11,7 @@ DELIMITER = '<unused1>'
 
 class AutoRegressionChatData(Dataset):
     """Dataloader for Dialogue Model based on GPT2"""
-    def __init__(self, data_path, tokenizer, max_len, k):
+    def __init__(self, data_path, tokenizer, max_len, reply_len):
         self._data = pd.read_parquet(data_path)
         self._data = self._data.dropna(axis=0)
         
@@ -20,7 +20,7 @@ class AutoRegressionChatData(Dataset):
         self.delimiter = DELIMITER
 
         self.max_len = max_len
-        self.k = k
+        self.reply_len = reply_len
         self.tokenizer = tokenizer
 
     def __len__(self):
@@ -36,7 +36,7 @@ class AutoRegressionChatData(Dataset):
             + self.tokenizer.eos_token)
         
         
-        context_len = self.max_len - 64
+        context_len = self.max_len - self.reply_len
         if query_len + reply_len > self.max_len:
             remain = self.max_len - query_len
             if remain <= 0:

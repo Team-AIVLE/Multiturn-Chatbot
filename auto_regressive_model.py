@@ -89,7 +89,7 @@ class AutoRegressiveModel(LightningModel):
 
     def train_dataloader(self):
         data_path = f'{self.hparams.data_dir}/train.parquet'
-        self.train_set = AutoRegressionChatData(data_path, max_len=self.hparams.max_len, tokenizer=self.tokenizer, k=self.hparams.k)
+        self.train_set = AutoRegressionChatData(data_path, max_len=self.hparams.max_len, tokenizer=self.tokenizer, reply_len=self.hparams.reply_len)
         train_dataloader = DataLoader(
             self.train_set, batch_size=self.hparams.batch_size, num_workers=2,
             shuffle=False, collate_fn=self._collate_fn)
@@ -97,7 +97,7 @@ class AutoRegressiveModel(LightningModel):
     
     def val_dataloader(self):
         data_path = f'{self.hparams.data_dir}/valid.parquet'
-        self.valid_set = AutoRegressionChatData(data_path, max_len=self.hparams.max_len, tokenizer=self.tokenizer, k=self.hparams.k)
+        self.valid_set = AutoRegressionChatData(data_path, max_len=self.hparams.max_len, tokenizer=self.tokenizer, reply_len=self.hparams.reply_len)
         val_dataloader = DataLoader(
             self.valid_set, batch_size=self.hparams.batch_size, num_workers=2,
             shuffle=False, collate_fn=self._collate_fn)
