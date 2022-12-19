@@ -52,8 +52,9 @@ sudo service docker start
 ### 4. dock image 다운 및 컨테이너 실행
 bot 이라는 이름으로 실행
 ```bash
-docker run --gpus all -it --name bot --shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864 pytorch/pytorch:1.6.0-cuda10.1-cudnn7-devel
+docker run --gpus all -it --name bot pytorch/pytorch:1.6.0-cuda10.1-cudnn7-devel
 ```
+만약 학습 시 메모리 오류가 생긴다면  --shm-size, --ulimit memlock=, --ulimit stack 등 명령어로 메모리를 정해준다.
 
 ### 5. 기본 update 및 필수 패키지 다운
 ```bash
