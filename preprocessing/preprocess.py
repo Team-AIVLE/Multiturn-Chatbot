@@ -68,8 +68,13 @@ def json_to_parquet(args):
     return train_persona, valid_persona
             
 def preprocess_overlap(args):
+    mkdir_p(args.proc_folder)
+
+    
     proc_df = pd.DataFrame()
     for dir_type in ['train', 'valid']:
+        dtype_dir_p = pjoin(args.proc_folder, dir_type)
+        mkdir_p(dtype_dir_p)
         
         for path in list(iglob(pjoin(args.origin_folder, f"{dir_type}/**.parquet"))):
             proc_df = pd.DataFrame()
@@ -157,8 +162,6 @@ def build_multiturn_dataset(args):
         save_parquet(mt_data, pjoin(args.output_folder, f"{filename}"))
         
 def preprocess_dataset(args):
-    mkdir_p(args.proc_folder)
-    mkdir_p(args.origin_folder)
     mkdir_p(args.output_folder)
 
     # json 파일을 Dataframe 형태로 변환
