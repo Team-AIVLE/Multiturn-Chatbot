@@ -187,11 +187,12 @@ def eval_model(args, model, device):
                     reply = reply_ar(args, model, tokenizer, device, context)
                 else:
                     reply = reply_s2s(args, model, tokenizer, device, context)
-                if not session['dialog']:
-                    if len(prev_time) > 0: 
-                        reply = f"안녕하세요. {prev_time}만이네요"
-                    else:
-                        reply = "안녕하세요. 반가워요"
+                    
+                # if not session['dialog']:
+                #     if len(prev_time) > 0: 
+                #         reply = f"안녕하세요. {prev_time}만이네요"
+                #     else:
+                #         reply = "안녕하세요. 반가워요"
 
                 result = result.append({
                     'sent_type': 'speaker_1_generated',
