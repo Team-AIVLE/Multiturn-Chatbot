@@ -26,6 +26,7 @@
 ## **use docker image url**
 
 pytorch/pytorch:1.6.0-cuda10.1-cudnn7-devel
+
 https://hub.docker.com/layers/pytorch/pytorch/1.6.0-cuda10.1-cudnn7-devel/images/sha256-ccebb46f954b1d32a4700aaeae0e24bd68653f92c6f276a608bf592b660b63d7?context=explore
 
 ### 1. Nvidia Container Toolkit 설치
