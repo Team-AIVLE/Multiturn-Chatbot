@@ -2,3 +2,5 @@ pytorch-lightning==1.2.1
 transformers
 pandas
 seaborn
+pyarrow
+fastparquet
