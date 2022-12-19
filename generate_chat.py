@@ -25,7 +25,6 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 def base_setting(args):
-    args.max_len = getattr(args, 'max_len', 256)
     args.k = getattr(args, 'k', 2)
 
 '''
@@ -52,6 +51,14 @@ if __name__ == "__main__":
     parser.add_argument('--output_folder',
                         type=str,
                         default='result')
+
+    parser.add_argument('--max_len',
+                        type=int,
+                        default=256)
+
+    parser.add_argument('--reply_len',
+                        type=int,
+                        default=64)
 
     parser.add_argument('--model_type',
                         type=str,
