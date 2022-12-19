@@ -148,6 +148,8 @@ output_folder
 
 ## **Training Dialogue Model** 
 
+*하나의 GPU만 사용*  
+
 <br>
 
 - `model_type`: 모델 유형      
@@ -167,9 +169,13 @@ data_dir
 
 훈련 커맨드
 ```bash
-python train.py --max_epochs 10 --data_dir data/ --model_type gpt2 --max_len 256 --reply_len 64 --gpuid 0
+python train.py --max_epochs 10 --data_dir data/ --model_type gpt2 --max_len 512 --reply_len 64 --gpuid 0
 ```
-batch size의 default는 16이며 만약 CUDA out of memory가 난다면 훈련 커맨드에 --batch size 8 를 추가해 batch size를 조절함
+batch size의 default는 16이며  
+
+
+> 💡 만약 `CUDA out of memory` 오류가 발생할 경우, 
+> 훈련 커맨드에 `--batch_size 8` 를 추가해 batch size를 조절해야 함 (default 16)
 
 <br>
 
@@ -193,11 +199,10 @@ output_folder                               제출할 xlsx 파일 저장 경로
 ```
 
 
-*하나의 GPU만 사용*  
 
 
 ```bash
-python generate_chat.py --input_folder data/ --model_type gpt2 --output_folder result/ --max_len 256 --reply_len 64 --gpuid 0 --model_pt <model checkpoint path>
+python generate_chat.py --input_folder data/ --model_type gpt2 --output_folder result/ --max_len 512 --reply_len 64 --gpuid 0 --model_pt <model checkpoint path>
 ```
 
 
