@@ -21,7 +21,6 @@ def set_seed(seed):
 def base_setting(args):
     args.proc_folder = getattr(args, 'proc_folder', 'proc')
     args.origin_folder = getattr(args, 'origin_folder', 'origin')
-    args.k = getattr(args, 'k', 2)
 
 
 if __name__ == "__main__":
@@ -30,10 +29,6 @@ if __name__ == "__main__":
     parser.add_argument('--input_folder',
                         type=str,
                         default='data')
-                        
-    parser.add_argument('--k',
-                        type=int,
-                        default=2)
 
     parser.add_argument('--output_folder',
                         type=str,

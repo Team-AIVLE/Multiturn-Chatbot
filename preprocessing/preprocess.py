@@ -122,7 +122,7 @@ def build_with_persona(args, train_persona, valid_persona):
             save_parquet(data, path.replace(".parquet", ""))
             
 
-def make_turn(sub_data : pd.DataFrame, k : int):    
+def make_turn(sub_data : pd.DataFrame):    
     query = sub_data.iloc[0]['utter'] 
     query = query if query is not None else " "
     k = len(sub_data) - 1 if sub_data.iloc[-1]['speaker'] == 'speaker1' else len(sub_data) - 2
@@ -141,12 +141,12 @@ def build_multiturn_dataset(args):
         for path in iglob(pjoin(d_type, "**.parquet")):
             data = pd.read_parquet(path).dropna()
         
-            for sess_id in tqdm(data['sess_id'].unique(), desc=f'{path} K = {args.k}'):
+            for sess_id in tqdm(data['sess_id'].unique(), desc=f'{path}'):
                 sess = data[data['sess_id'] == sess_id]
 
                 # Prefix에 prevTimeInfo는 배제 (speaker1의 페르소나만 포함)
                 prefix = sess.iloc[0]['prefix'].split(DELIMITER)[0]
-                query, reply = make_turn(sess, k=args.k)
+                query, reply = make_turn(sess)
                 row = {
                     'sess_id': sess_id,
                     'query' :  prefix + DELIMITER + query,
