@@ -4,24 +4,20 @@
 ### **파일 구조**
 
 ```bash
-.
-├── data                        데이터셋 저장 경로
-│   ├── train.csv
-│   ├── valid.csv
-│   └── test.csv               
+.            
 │
-├── preprocessing               데이터 라벨링 및 전처리 
-│   ├── ...
-│   ├── build_dataset.py        데이터셋 구축을 위한 실행 코드
+├── preprocessing               데이터 전처리 
+│   ├── main.py                 데이터셋 구축을 위한 실행 코드
 │   └── ...                 
 │
-├── result/                     모델 테스트 결과 저장 경로
-├── utils/
+├── lightning_logs/             훈련 로그 저장 경로
+├── model_ckpt/                 모델 저장 경로
 ├── ...
-├── main.py                     모델 학습 및 테스트를 위한 실행 코드
-├── READMD.md
-└── ...
+├── train.py                     모델 학습을 위한 실행 코드
+├── generate_chat.py             인퍼런스 실행 코드
+└── READMD.md
 ```
+
 
 <br>
 
@@ -78,23 +74,63 @@ HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir --upgrade --force-reinstall ho
 if gpu = [] 오류일시
 pytorch와 cuda의 버전 차이때문이므로 cuda와 pytorch의 버전을 맞춰줌 
 
-## **Building Dataset** 
+<br>
 
+----
+
+## **Building Dataset** 
 
 ```bash
 cd preprocessing/
 ```
 
-### 1. Build Training, Validation, Test dataset
 ```bash
-python build_dataset.py --preprocessing --split --data_dir ../data --result_dir ../result
+python main.py --input_folder data/ --output_folder result/
+```
+
+### 1. Build Training, Validation dataset
+
+전처리할 `input_folder` 폴더 구조
+
+```bash
+input_folder
+├── session_2/                
+│   ├── train/
+│   └── validation/
+│       ├── format_train/
+│       │     ├── K4-02421-CL21636-CP32259-14-02-S4.json
+│       │     └── ...
+│       └── format_test/
+│
+├── session_3/                
+│   ├── train/
+│   └── validation/
+│       ├── format_train/
+│       │     ├── K4-02421-CL21636-CP32259-14-02-S4.json
+│       │     └── ...
+│       └── format_test/
+│
+└── session_4/                
+    ├── train/
+    └── validation/
+        ├── format_train/
+        │     ├── K4-02421-CL21636-CP32259-14-02-S4.json
+        │     └── ...
+        └── format_test/
+```
+
+전처리가 끝나면, `output_folder` 내에 parquet 파일이 생성됨 
+```bash
+output_folder
+├── train.parquet
+└── valid.parquet             
 ```
 
 <br>
 
 ---
 
-## **Training/Testing Dialogue Model** 
+## **Training Dialogue Model** 
 
 <br>
 
@@ -102,29 +138,51 @@ python build_dataset.py --preprocessing --split --data_dir ../data --result_dir 
     - `gpt2` : Pretrained KoGPT2 (`skt/kogpt2-base-v2`)
     - `bart` : Pretrained KoBART (`gogamza/kobart-base-v2`)
 
-### 1. Training
+_저희 팀은 gpt2를 사용하였습니다._ 
 
+<br>
+
+`data_dir` 내에는 train.parquet, valid.parquet 파일이 있어야 함  
 ```bash
-python main.py --train --max_epochs 10 --data_dir data/ --model_type gpt2 --model_name gpt2_chat --max_len 64 --gpuid 0
+data_dir
+├── train.parquet
+└── valid.parquet             
+```
+
+훈련 커맨드
+```bash
+python train.py --max_epochs 10 --data_dir data/ --model_type gpt2 --max_len 256 --reply_len 64 --gpuid 0
 ```
 
 <br>
 
-### 2. Testing
+----
+
+## **Inference** 
+
+`input_folder` 폴더 구조
+
+```bash
+input_folder                                입력 데이터셋 경로
+├── K4-02421-CL21636-CP32259-14-02-S4.json
+└── ...               
+```
+
+인퍼런스가 끝나면 `output_folder` 내에 xlsx 파일 생성됨
+```bash
+output_folder                               제출할 xlsx 파일 저장 경로 
+├── K4-02421-CL21636-CP32259-14-02-S4.xlsx  
+└── ...                 
+```
+
 
 *하나의 GPU만 사용*  
 
-#### (1) `<data_dir>`/test.csv에 대한 성능 테스트
 
 ```bash
-python main.py --data_dir data/ --model_type gpt2 --model_name gpt2_chat --save_dir result --max_len 64 --gpuid 0 --model_pt <model checkpoint path>
+python generate_chat.py --input_folder data/ --model_type gpt2 --output_folder result/ --max_len 256 --reply_len 64 --gpuid 0 --model_pt <model checkpoint path>
 ```
 
-#### (2) 사용자 입력에 대한 성능 테스트
-
-```bash
-python main.py --chat --data_dir data/ --model_type gpt2 --max_len 64 --gpuid 0 --model_pt <model checkpoint path>
-```
 
 <br>
 
