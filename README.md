@@ -73,6 +73,18 @@ cd Multisession-Chatbot
 pip install -r requirements.txt
 ```
 
+### **Konlpy 설치**
+
+```bash
+sudo apt-get install g++ openjdk-8-jdk python3-dev python3-pip curl
+
+python3 -m pip install --upgrade pip
+python3 -m pip install konlpy    
+
+sudo apt-get install curl git
+bash <(curl -s https://raw.githubusercontent.com/konlpy/konlpy/master/scripts/mecab.sh)
+```
+
 if HOROVOD 오류일시
 ```bash
 HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir --upgrade --force-reinstall horovod && ldconfig
