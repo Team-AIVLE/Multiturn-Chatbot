@@ -1,5 +1,5 @@
-# Multisession-Chatbot
-한국어 멀티세션 챗봇
+# Korean Multiturn-Chatbot
+한국어 멀티턴 챗봇
 
 ### **파일 구조**
 
